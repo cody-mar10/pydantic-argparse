@@ -35,6 +35,67 @@
     </a>
 </div>
 
+## Fork major changes
+1. Upgrade to only be compatible with `Pydantic` v2.1+
+    - `Pydantic` recently released version 2, which heavily relies on a Rust backend for major speed improvements in data validation.
+    - However, there are many breaking changes that were introduced in the process.
+2. Nested `Pydantic` models now default to argument **groups** instead of subcommands. This leads to large argument lists being much more composable for large applications since the arguments can be broken into smaller groups.
+    - Subcommands are now explicitly *opt-in* features. A convenience base class `pydantic_argparse.BaseCommand` has been provided that sets the queried configuration variable, which can then be used as a typical `pydantic.BaseModel` otherwise.
+3. The `metavar` option for `argparser.ArgumentParser.add_argument` now (almost always) defaults to the type of the argument instead of the argument name.
+
+
+### Argument Groups example
+```python
+from pydantic import Field, BaseModel
+from pydantic_argparse import ArgumentParser, BaseArgument
+
+# BaseArgument is just a pydantic.BaseModel that explicitly opted out from subcommands
+# however, pydantic.BaseModel classes have implicitly opted out as well
+
+class Group1(BaseArgument):
+    string: str = Field(description="a required string")
+    integer: int = Field(description="a required integer")
+    decimal: float = Field(description="a required float")
+    flag: bool = Field(False, description="a flag")
+
+class Group2(BaseArgument):
+    name: str = Field(description="your name")
+    age: int = Field(82, description="your age")
+
+class Arguments(BaseModel):
+    first: Group1
+    second: Group2
+
+if __name__ == "__main__":
+    parser = ArgumentParser(model=Arguments)
+    parser.parse_typed_args()
+```
+
+```console
+$ python3 example_groups.py --help
+usage: example_groups.py [-h] [-v] --string STR --integer INT [--flag] 
+                                   --name STR [--age INT]
+
+FIRST:
+  --string  STR      a required string
+  --integer INT      a required integer
+  --decimal FLOAT    a required float
+  --flag             a flag
+
+SECOND:
+  --name    STR      your name
+  --age     INT      you age (default: 82)
+
+help:
+  -h, --help         show this help message and exit
+  -v, --version      show program's version number and exit
+```
+
+### TODO
+
+- [ ] Look into short arg names at the command line.
+  - This may involve the use of the model field `.alias` option
+
 ## Help
 See [documentation](https://pydantic-argparse.supimdos.com) for help.
 
