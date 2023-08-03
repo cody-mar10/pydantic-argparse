@@ -3,13 +3,8 @@
 In order to support Python 3.7 and 3.8 while retaining the unit tests, we need
 to backport the bugfix for [`BPO-29298`](https://bugs.python.org/issue29298).
 """
-
-
-# Standard
 import argparse
 import sys
-
-# Typing
 from typing import Optional
 
 
