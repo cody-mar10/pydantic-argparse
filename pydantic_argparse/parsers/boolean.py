@@ -6,26 +6,21 @@ function, which parses boolean `pydantic` model fields to `ArgumentParser`
 command-line arguments.
 """
 
-
-# Standard
 import argparse
-
-# Third-Party
-import pydantic
-
-# Typing
 from typing import Optional
 
-# Local
 from pydantic_argparse import utils
 from pydantic_argparse.argparse import actions
+from pydantic_argparse.utils.pydantic import PydanticField, PydanticValidator
+
+from .utils import SupportsAddArgument
 
 
-def should_parse(field: pydantic.fields.ModelField) -> bool:
+def should_parse(field: PydanticField) -> bool:
     """Checks whether the field should be parsed as a `boolean`.
 
     Args:
-        field (pydantic.fields.ModelField): Field to check.
+        field (PydanticField): Field to check.
 
     Returns:
         bool: Whether the field should be parsed as a `boolean`.
@@ -35,25 +30,27 @@ def should_parse(field: pydantic.fields.ModelField) -> bool:
 
 
 def parse_field(
-    parser: argparse.ArgumentParser,
-    field: pydantic.fields.ModelField,
-) -> Optional[utils.pydantic.PydanticValidator]:
+    parser: SupportsAddArgument,
+    field: PydanticField,
+) -> Optional[PydanticValidator]:
     """Adds boolean pydantic field to argument parser.
 
     Args:
         parser (argparse.ArgumentParser): Argument parser to add to.
-        field (pydantic.fields.ModelField): Field to be added to parser.
+        field (PydanticField): Field to be added to parser.
 
     Returns:
-        Optional[utils.pydantic.PydanticValidator]: Possible validator method.
+        Optional[PydanticValidator]: Possible validator method.
     """
     # Compute Argument Intrinsics
-    is_inverted = not field.required and bool(field.get_default())
+    is_inverted = not field.info.is_required() and bool(field.info.get_default())
 
     # Determine Argument Properties
     action = (
-        actions.BooleanOptionalAction if field.required
-        else argparse._StoreFalseAction if is_inverted
+        actions.BooleanOptionalAction
+        if field.info.is_required()
+        else argparse._StoreFalseAction
+        if is_inverted
         else argparse._StoreTrueAction
     )
 
@@ -62,8 +59,8 @@ def parse_field(
         utils.arguments.name(field, is_inverted),
         action=action,
         help=utils.arguments.description(field),
-        dest=field.alias,
-        required=bool(field.required),
+        dest=field.info.alias,
+        required=field.info.is_required(),
     )
 
     # Construct and Return Validator

@@ -6,61 +6,57 @@ whether this module should be used to parse the field, as well as the
 `ArgumentParser` command-line arguments.
 """
 
-
-# Standard
 import argparse
 import collections.abc
 import enum
-
-# Third-Party
-import pydantic
-
-# Typing
 from typing import Optional
 
-# Local
 from pydantic_argparse import utils
+from pydantic_argparse.utils.pydantic import PydanticField, PydanticValidator
+
+from .utils import SupportsAddArgument
 
 
-def should_parse(field: pydantic.fields.ModelField) -> bool:
+def should_parse(field: PydanticField) -> bool:
     """Checks whether the field should be parsed as a `container`.
 
     Args:
-        field (pydantic.fields.ModelField): Field to check.
+        field (PydanticField): Field to check.
 
     Returns:
         bool: Whether the field should be parsed as a `container`.
     """
     # Check and Return
-    return (
-        utils.types.is_field_a(field, collections.abc.Container)
-        and not utils.types.is_field_a(field, (collections.abc.Mapping, enum.Enum, str, bytes))
+    return utils.types.is_field_a(
+        field, collections.abc.Container
+    ) and not utils.types.is_field_a(
+        field, (collections.abc.Mapping, enum.Enum, str, bytes)
     )
 
 
 def parse_field(
-    parser: argparse.ArgumentParser,
-    field: pydantic.fields.ModelField,
-) -> Optional[utils.pydantic.PydanticValidator]:
+    parser: SupportsAddArgument,
+    field: PydanticField,
+) -> Optional[PydanticValidator]:
     """Adds container pydantic field to argument parser.
 
     Args:
         parser (argparse.ArgumentParser): Argument parser to add to.
-        field (pydantic.fields.ModelField): Field to be added to parser.
+        field (PydanticField): Field to be added to parser.
 
     Returns:
-        Optional[utils.pydantic.PydanticValidator]: Possible validator method.
+        Optional[PydanticValidator]: Possible validator method.
     """
-    # Add Container Field
     parser.add_argument(
         utils.arguments.name(field),
         action=argparse._StoreAction,
         nargs=argparse.ONE_OR_MORE,
         help=utils.arguments.description(field),
-        dest=field.alias,
-        metavar=field.alias.upper(),
-        required=bool(field.required),
+        dest=field.info.alias,
+        metavar=utils.arguments.metavar(field),
+        required=field.info.is_required(),
     )
 
     # Construct and Return Validator
+    # TODO: this is basically useless?
     return utils.pydantic.as_validator(field, lambda v: v)

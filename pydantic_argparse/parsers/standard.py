@@ -8,41 +8,36 @@ Unlike the other `parser` modules, the `standard` module does not contain a
 that do not match any other types and require no special handling are parsed.
 """
 
-
-# Standard
 import argparse
-
-# Third-Party
-import pydantic
-
-# Typing
 from typing import Optional
 
-# Local
 from pydantic_argparse import utils
+from pydantic_argparse.utils.pydantic import PydanticField, PydanticValidator
+
+from .utils import SupportsAddArgument
 
 
 def parse_field(
-    parser: argparse.ArgumentParser,
-    field: pydantic.fields.ModelField,
-) -> Optional[utils.pydantic.PydanticValidator]:
+    parser: SupportsAddArgument,
+    field: PydanticField,
+) -> Optional[PydanticValidator]:
     """Adds standard pydantic field to argument parser.
 
     Args:
         parser (argparse.ArgumentParser): Argument parser to add to.
-        field (pydantic.fields.ModelField): Field to be added to parser.
+        field (PydanticField): Field to be added to parser.
 
     Returns:
-        Optional[utils.pydantic.PydanticValidator]: Possible validator method.
+        Optional[PydanticValidator]: Possible validator method.
     """
     # Add Standard Field
     parser.add_argument(
         utils.arguments.name(field),
         action=argparse._StoreAction,
         help=utils.arguments.description(field),
-        dest=field.alias,
-        metavar=field.alias.upper(),
-        required=bool(field.required),
+        dest=field.info.alias,
+        metavar=utils.arguments.metavar(field),
+        required=field.info.is_required(),
     )
 
     # Construct and Return Validator

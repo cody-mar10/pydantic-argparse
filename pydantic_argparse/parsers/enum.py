@@ -6,26 +6,21 @@ function, which parses enum `pydantic` model fields to `ArgumentParser`
 command-line arguments.
 """
 
-
-# Standard
 import argparse
 import enum
+from typing import Optional, Type, cast
 
-# Third-Party
-import pydantic
-
-# Local
 from pydantic_argparse import utils
+from pydantic_argparse.utils.pydantic import PydanticField, PydanticValidator
 
-# Typing
-from typing import Optional, Type
+from .utils import SupportsAddArgument
 
 
-def should_parse(field: pydantic.fields.ModelField) -> bool:
+def should_parse(field: PydanticField) -> bool:
     """Checks whether the field should be parsed as an `enum`.
 
     Args:
-        field (pydantic.fields.ModelField): Field to check.
+        field (PydanticField): Field to check.
 
     Returns:
         bool: Whether the field should be parsed as an `enum`.
@@ -35,34 +30,33 @@ def should_parse(field: pydantic.fields.ModelField) -> bool:
 
 
 def parse_field(
-    parser: argparse.ArgumentParser,
-    field: pydantic.fields.ModelField,
-) -> Optional[utils.pydantic.PydanticValidator]:
+    parser: SupportsAddArgument,
+    field: PydanticField,
+) -> Optional[PydanticValidator]:
     """Adds enum pydantic field to argument parser.
 
     Args:
         parser (argparse.ArgumentParser): Argument parser to add to.
-        field (pydantic.fields.ModelField): Field to be added to parser.
+        field (PydanticField): Field to be added to parser.
 
     Returns:
-        Optional[utils.pydantic.PydanticValidator]: Possible validator method.
+        Optional[PydanticValidator]: Possible validator method.
     """
     # Extract Enum
-    enum_type: Type[enum.Enum] = field.outer_type_
+    enum_type = cast(Type[enum.Enum], field.info.annotation)
 
     # Compute Argument Intrinsics
-    is_flag = len(enum_type) == 1 and not bool(field.required)
-    is_inverted = is_flag and field.get_default() is not None and field.allow_none
+    is_flag = len(enum_type) == 1 and not field.info.is_required()
+    is_inverted = is_flag and field.info.get_default() is not None
 
     # Determine Argument Properties
     metavar = f"{{{', '.join(e.name for e in enum_type)}}}"
-    action = (
-        argparse._StoreConstAction if is_flag
-        else argparse._StoreAction
-    )
+    action = argparse._StoreConstAction if is_flag else argparse._StoreAction
     const = (
-        {} if not is_flag
-        else {"const": None} if is_inverted
+        {}
+        if not is_flag
+        else {"const": None}
+        if is_inverted
         else {"const": list(enum_type)[0]}
     )
 
@@ -71,9 +65,9 @@ def parse_field(
         utils.arguments.name(field, is_inverted),
         action=action,
         help=utils.arguments.description(field),
-        dest=field.alias,
+        dest=field.info.alias,
         metavar=metavar,
-        required=bool(field.required),
+        required=field.info.is_required(),
         **const,  # type: ignore[arg-type]
     )
 

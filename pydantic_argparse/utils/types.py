@@ -5,14 +5,10 @@ comparing the types of `pydantic fields.
 """
 
 
-# Standard
 import sys
-
-# Third-Party
-import pydantic
-
-# Typing
 from typing import Any, Tuple, Union
+
+from .pydantic import PydanticField
 
 # Version-Guarded
 if sys.version_info < (3, 8):  # pragma: <3.8 cover
@@ -22,7 +18,7 @@ else:  # pragma: >=3.8 cover
 
 
 def is_field_a(
-    field: pydantic.fields.ModelField,
+    field: PydanticField,
     types: Union[Any, Tuple[Any, ...]],
 ) -> bool:
     """Checks whether the subject *is* any of the supplied types.
@@ -37,7 +33,7 @@ def is_field_a(
     else `False`.
 
     Args:
-        field (pydantic.fields.ModelField): Subject field to check type of.
+        field (PydanticField): Subject field to check type of.
         types (Union[Any, Tuple[Any, ...]]): Type(s) to compare field against.
 
     Returns:
@@ -45,10 +41,10 @@ def is_field_a(
     """
     # Create tuple if only one type was provided
     if not isinstance(types, tuple):
-        types = (types, )
+        types = (types,)
 
     # Get field type, or origin if applicable
-    field_type = get_origin(field.outer_type_) or field.outer_type_
+    field_type = get_origin(field.info.annotation) or field.info.annotation
 
     # Check `isinstance` and `issubclass` validity
     # In order for `isinstance` and `issubclass` to be valid, all arguments
