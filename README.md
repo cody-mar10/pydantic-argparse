@@ -36,7 +36,7 @@
 </div>
 
 ## Fork major changes
-1. Upgrade to only be compatible with `Pydantic` v2.1+
+1. Upgrade to only be compatible with `Pydantic` v2+
     - `Pydantic` recently released version 2, which heavily relies on a Rust backend for major speed improvements in data validation.
     - However, there are many breaking changes that were introduced in the process.
 2. Nested `Pydantic` models now default to argument **groups** instead of subcommands. This leads to large argument lists being much more composable for large applications since the arguments can be broken into smaller groups.
