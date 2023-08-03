@@ -6,51 +6,53 @@ function, which parses nested `pydantic` model fields to `ArgumentParser`
 sub-commands.
 """
 
-
-# Standard
 import argparse
+from typing import Optional, Type, cast
 
-# Third-Party
-import pydantic
+from pydantic import BaseModel
 
-# Typing
-from typing import Optional
-
-# Local
 from pydantic_argparse import utils
+from pydantic_argparse.utils.pydantic import (
+    PydanticField,
+    PydanticValidator,
+    is_subcommand,
+)
 
 
-def should_parse(field: pydantic.fields.ModelField) -> bool:
+def should_parse(field: PydanticField) -> bool:
     """Checks whether the field should be parsed as a `command`.
 
     Args:
-        field (pydantic.fields.ModelField): Field to check.
+        field (PydanticField): Field to check.
 
     Returns:
         bool: Whether the field should be parsed as a `command`.
     """
     # Check and Return
-    return utils.types.is_field_a(field, pydantic.BaseModel)
+    if utils.types.is_field_a(field, BaseModel):
+        model_type = cast(Type[BaseModel], field.info.annotation)
+        return is_subcommand(model_type)
+    return False
 
 
 def parse_field(
     subparser: argparse._SubParsersAction,
-    field: pydantic.fields.ModelField,
-) -> Optional[utils.pydantic.PydanticValidator]:
+    field: PydanticField,
+) -> Optional[PydanticValidator]:
     """Adds command pydantic field to argument parser.
 
     Args:
         subparser (argparse._SubParsersAction): Sub-parser to add to.
-        field (pydantic.fields.ModelField): Field to be added to parser.
+        field (PydanticField): Field to be added to parser.
 
     Returns:
-        Optional[utils.pydantic.PydanticValidator]: Possible validator method.
+        Optional[PydanticValidator]: Possible validator method.
     """
     # Add Command
     subparser.add_parser(
-        field.alias,
-        help=field.field_info.description,
-        model=field.outer_type_,  # type: ignore[call-arg]
+        field.info.title or field.info.alias or field.name,
+        help=field.info.description,
+        model=field.info.annotation,  # type: ignore[call-arg]
         exit_on_error=False,  # Allow top level parser to handle exiting
     )
 
