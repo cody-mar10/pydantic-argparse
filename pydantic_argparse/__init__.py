@@ -9,17 +9,42 @@ The public interface exposed by this package is the declarative and typed
 """
 
 # Local
+from pydantic import BaseModel, ConfigDict
+
+from pydantic_argparse.__metadata__ import (
+    __author__,
+    __description__,
+    __license__,
+    __title__,
+    __version__,
+)
 from pydantic_argparse.argparse import ArgumentParser
-from pydantic_argparse.__metadata__ import __title__
-from pydantic_argparse.__metadata__ import __description__
-from pydantic_argparse.__metadata__ import __version__
-from pydantic_argparse.__metadata__ import __author__
-from pydantic_argparse.__metadata__ import __license__
+
+from . import argparse, parsers, utils
+
+
+class BaseArgument(BaseModel):
+    """Base pydantic model for argument groups."""
+
+    model_config = ConfigDict(json_schema_extra=dict(subcommand=False))
+
+
+class BaseCommand(BaseModel):
+    """Base pydantic model for command groups.
+
+    This class is only a convenience base class that sets the
+    `model_config` parameter to have the `json_schema_extra` parameter to
+    have `subcommand=True`.
+    """
+
+    model_config = ConfigDict(json_schema_extra=dict(subcommand=True))
 
 
 # Public Re-Exports
 __all__ = (
     "ArgumentParser",
+    "BaseArgument",
+    "BaseCommand",
     "__title__",
     "__description__",
     "__version__",
