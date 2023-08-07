@@ -1,7 +1,6 @@
 """Utilities to help with parsing arbitrarily nested `pydantic` models."""
 
 from argparse import Namespace
-from collections.abc import Container, Mapping
 from typing import Any, Dict, Generic, Optional, Tuple, Type
 
 from boltons.iterutils import get_path, remap
@@ -77,18 +76,14 @@ class _NestedArgumentParser(Generic[PydanticModelT]):
         return model_fields
 
     def _remove_null_leaves(self, schema: Dict[str, Any]):
-        def _remove(path: Tuple, key: Any, value: Any) -> bool:
-            should_keep = True
-            if value is not None:
-                if isinstance(value, (Container, Mapping)):
-                    # remove empty iterables
-                    should_keep = len(value) > 0
-            else:
-                # remove None leaves
-                should_keep = False
-            return should_keep
-
-        return remap(schema, visit=_remove)
+        # only remove None leaves
+        # actually CANNOT remove empty containers
+        # this causes problems with nested submodels that don't
+        # get any new args at command line, and therefore, are
+        # relying on the submodel defaults
+        # -> thus, the submodel name/key needs to be kept in
+        # the schema
+        return remap(schema, visit=lambda p, k, v: v is not None)
 
     def _unset_subcommands(self, schema: Dict[str, Any], command: str):
         return {key: value for key, value in schema.items() if key == command}
