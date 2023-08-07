@@ -215,6 +215,7 @@ class PydanticField(NamedTuple):
             str: Standardised name of the argument. Checks `pydantic.Field` title first,
                 but defaults to the field name.
         """
+        # TODO: this should return a tuple to allow short name args
         # Construct Prefix
         prefix = "--no-" if invert else "--"
         name = self.info.title or self.name
@@ -229,14 +230,15 @@ class PydanticField(NamedTuple):
             str: Standardised description of the argument.
         """
         # Construct Default String
-        default = (
-            f"(default: {self.info.get_default()})"
-            if not self.info.is_required()
-            else None
-        )
+        if self.info.is_required():
+            default = None
+            required = "REQUIRED:"
+        else:
+            default = f"(default: {self.info.get_default()})"
+            required = None
 
         # Return Standardised Description String
-        return " ".join(filter(None, [self.info.description, default]))
+        return " ".join(filter(None, [required, self.info.description, default]))
 
     def metavar(self) -> Optional[str]:
         """Generate the metavar name for the field.
