@@ -150,7 +150,7 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
 
         try:
             nested_parser = _NestedArgumentParser(model=self.model, namespace=namespace)
-            return nested_parser.validate()
+            return cast(PydanticModelT, nested_parser.validate())
         except ValidationError as exc:
             # Catch exceptions, and use the ArgumentParser.error() method
             # to report it to the user
@@ -219,9 +219,9 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
 
     def _add_model(
         self,
-        model: Type[PydanticModelT],
+        model: Type[BaseModel],
         arg_group: Optional[argparse._ArgumentGroup] = None,
-    ) -> Type[PydanticModelT]:
+    ) -> Type[BaseModel]:
         """Adds the `pydantic` model to the argument parser.
 
         This method also generates "validators" for the arguments derived from
@@ -245,12 +245,8 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
 
         # Loop through fields in model
         for field in PydanticField.parse_model(model):
-            if utils.types.is_field_a(field, BaseModel):
-                # TODO: this needs to also account for nested models
-                # the current behavior flattens nested models, which works for the help page
-                # but doesn't properly reconstruct the nested model
-                field_model_type = cast(Type[BaseModel], field.info.annotation)
-                if utils.pydantic.is_subcommand(field_model_type):
+            if field.is_a(BaseModel):
+                if field.is_subcommand():
                     validator = parsers.command.parse_field(self._commands(), field)
                 else:
                     # create new arg group
@@ -258,8 +254,9 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
                     arg_group = self.add_argument_group(group_name)
 
                     # recurse and parse fields below this submodel
+                    # TODO: storage of submodels not needed
                     self._submodels[field.name] = self._add_model(
-                        model=field_model_type,  # type: ignore
+                        model=field.model_type,
                         arg_group=arg_group,
                     )
 
