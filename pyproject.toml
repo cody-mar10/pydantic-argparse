@@ -13,6 +13,7 @@ include = ["LICENSE.md"]
 [tool.poetry.dependencies]
 python = "^3.7"
 pydantic = "^2"
+boltons = "*"
 importlib_metadata = { version = ">=4", python = "<3.8" }
 typing_extensions = { version = ">=4", python = "<3.8" }
 
