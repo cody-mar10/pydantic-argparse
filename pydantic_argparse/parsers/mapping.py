@@ -27,7 +27,7 @@ def should_parse(field: PydanticField) -> bool:
         bool: Whether the field should be parsed as a `mapping`.
     """
     # Check and Return
-    return utils.types.is_field_a(field, collections.abc.Mapping)
+    return field.is_a(collections.abc.Mapping)
 
 
 def parse_field(

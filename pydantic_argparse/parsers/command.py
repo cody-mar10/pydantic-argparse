@@ -7,15 +7,11 @@ sub-commands.
 """
 
 import argparse
-from typing import Optional, Type, cast
+from typing import Optional
 
-from pydantic import BaseModel
-
-from pydantic_argparse import utils
 from pydantic_argparse.utils.pydantic import (
     PydanticField,
     PydanticValidator,
-    is_subcommand,
 )
 
 
@@ -29,10 +25,7 @@ def should_parse(field: PydanticField) -> bool:
         bool: Whether the field should be parsed as a `command`.
     """
     # Check and Return
-    if utils.types.is_field_a(field, BaseModel):
-        model_type = cast(Type[BaseModel], field.info.annotation)
-        return is_subcommand(model_type)
-    return False
+    return field.is_subcommand()
 
 
 def parse_field(
@@ -52,7 +45,7 @@ def parse_field(
     subparser.add_parser(
         field.info.title or field.info.alias or field.name,
         help=field.info.description,
-        model=field.info.annotation,  # type: ignore[call-arg]
+        model=field.model_type,  # type: ignore[call-arg]
         exit_on_error=False,  # Allow top level parser to handle exiting
     )
 

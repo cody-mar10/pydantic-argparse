@@ -26,7 +26,7 @@ def should_parse(field: PydanticField) -> bool:
         bool: Whether the field should be parsed as an `enum`.
     """
     # Check and Return
-    return utils.types.is_field_a(field, enum.Enum)
+    return field.is_a(enum.Enum)
 
 
 def parse_field(

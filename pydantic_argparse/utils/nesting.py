@@ -1,14 +1,13 @@
 """Utilities to help with parsing arbitrarily nested `pydantic` models."""
 
 from argparse import Namespace
-from typing import Any, Dict, Generic, Optional, Tuple, Type, cast
+from typing import Any, Dict, Generic, Optional, Tuple, Type
 
 from boltons.iterutils import get_path, remap
 from pydantic import BaseModel
 
 from .namespaces import to_dict
-from .pydantic import PydanticField, PydanticModelT, is_subcommand
-from .types import is_field_a
+from .pydantic import PydanticField, PydanticModelT
 
 
 class _ArgumentTree:
@@ -60,11 +59,10 @@ class _NestedArgumentParser(Generic[PydanticModelT]):
         model_fields: Dict[str, Any] = dict()
 
         for field in PydanticField.parse_model(model):
-            key, info = field
+            key = field.name
 
-            if is_field_a(field, BaseModel):
-                field_model_type = cast(Type[BaseModel], info.annotation)
-                if is_subcommand(field_model_type):
+            if field.is_a(BaseModel):
+                if field.is_subcommand():
                     self.subcommand = True
 
                 new_parent = (*parent, key) if parent is not None else (key,)
@@ -73,7 +71,7 @@ class _NestedArgumentParser(Generic[PydanticModelT]):
                 # which matches the actual schema the nested
                 # schema pydantic will be expecting
                 model_fields[key] = self._get_nested_model_fields(
-                    field_model_type, new_parent
+                    field.model_type, new_parent
                 )
             else:
                 # start with all leaves as None

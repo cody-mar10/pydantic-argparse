@@ -31,7 +31,7 @@ def should_parse(field: PydanticField) -> bool:
         bool: Whether the field should be parsed as a `literal`.
     """
     # Check and Return
-    return utils.types.is_field_a(field, Literal)
+    return field.is_a(Literal)
 
 
 def parse_field(
