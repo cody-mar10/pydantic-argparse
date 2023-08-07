@@ -205,6 +205,57 @@ class PydanticField(NamedTuple):
             #   - field is not a pydantic BaseModel or it can't be found
             return default
 
+    def argname(self, invert: bool = False) -> str:
+        """Standardises argument name when printing to command line.
+
+        Args:
+            invert (bool): Whether to invert the name by prepending `--no-`.
+
+        Returns:
+            str: Standardised name of the argument. Checks `pydantic.Field` title first,
+                but defaults to the field name.
+        """
+        # Construct Prefix
+        prefix = "--no-" if invert else "--"
+        name = self.info.title or self.name
+
+        # Prepend prefix, replace '_' with '-'
+        return f"{prefix}{name.replace('_', '-')}"
+
+    def description(self) -> str:
+        """Standardises argument description.
+
+        Returns:
+            str: Standardised description of the argument.
+        """
+        # Construct Default String
+        default = (
+            f"(default: {self.info.get_default()})"
+            if not self.info.is_required()
+            else None
+        )
+
+        # Return Standardised Description String
+        return " ".join(filter(None, [self.info.description, default]))
+
+    def metavar(self) -> Optional[str]:
+        """Generate the metavar name for the field.
+
+        Returns:
+            Optional[str]: Field metavar if the `Field.info.alias` exists.
+                Otherwise, return constituent type names.
+        """
+        # check alias first
+        if self.info.alias is not None:
+            return self.info.alias.upper()
+
+        # otherwise default to the type
+        field_type = self.get_type()
+        if field_type:
+            if isinstance(field_type, tuple):
+                return "|".join(t.__name__.upper() for t in field_type)
+            return field_type.__name__.upper()
+
 
 def as_validator(
     field: PydanticField,

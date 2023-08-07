@@ -62,9 +62,9 @@ def parse_field(
 
     # Add Enum Field
     parser.add_argument(
-        utils.arguments.name(field, is_inverted),
+        field.argname(is_inverted),
         action=action,
-        help=utils.arguments.description(field),
+        help=field.description(),
         dest=field.info.alias,
         metavar=metavar,
         required=field.info.is_required(),

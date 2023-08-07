@@ -46,12 +46,12 @@ def parse_field(
         Optional[PydanticValidator]: Possible validator method.
     """
     parser.add_argument(
-        utils.arguments.name(field),
+        field.argname(),
         action=argparse._StoreAction,
         nargs=argparse.ONE_OR_MORE,
-        help=utils.arguments.description(field),
+        help=field.description(),
         dest=field.info.alias,
-        metavar=utils.arguments.metavar(field),
+        metavar=field.metavar(),
         required=field.info.is_required(),
     )
 
