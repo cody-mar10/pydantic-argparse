@@ -249,6 +249,13 @@ class ArgumentParser(argparse.ArgumentParser, Generic[PydanticModelT]):
                 if field.is_subcommand():
                     validator = parsers.command.parse_field(self._commands(), field)
                 else:
+                    # for any nested pydantic models, set default factory to model_construct
+                    # method. This allows pydantic to handle if no arguments from a nested
+                    # submodel are passed by creating the default submodel.
+                    # This is not allowed for subcommands.
+                    if field.info.default_factory is None:
+                        field.info.default_factory = field.model_type.model_construct
+
                     # create new arg group
                     group_name = str.upper(field.info.title or field.name)
                     arg_group = self.add_argument_group(group_name)
