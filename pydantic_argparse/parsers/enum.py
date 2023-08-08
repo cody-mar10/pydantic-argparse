@@ -65,7 +65,7 @@ def parse_field(
         field.argname(is_inverted),
         action=action,
         help=field.description(),
-        dest=field.info.alias,
+        dest=field.name,
         metavar=metavar,
         required=field.info.is_required(),
         **const,  # type: ignore[arg-type]

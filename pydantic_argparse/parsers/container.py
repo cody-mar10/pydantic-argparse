@@ -50,7 +50,7 @@ def parse_field(
         action=argparse._StoreAction,
         nargs=argparse.ONE_OR_MORE,
         help=field.description(),
-        dest=field.info.alias,
+        dest=field.name,
         metavar=field.metavar(),
         required=field.info.is_required(),
     )
