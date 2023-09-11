@@ -7,6 +7,7 @@ dynamically generated validators and environment variable parsers.
 """
 
 from collections.abc import Container, Mapping
+from enum import Enum
 from typing import (
     Any,
     Callable,
@@ -234,7 +235,10 @@ class PydanticField(NamedTuple):
             default = None
             required = "REQUIRED:"
         else:
-            default = f"(default: {self.info.get_default()})"
+            _default = self.info.get_default()
+            if isinstance(_default, Enum):
+                _default = _default.name
+            default = f"(default: {_default})"
             required = None
 
         # Return Standardised Description String
