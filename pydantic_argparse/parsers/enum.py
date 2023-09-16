@@ -57,14 +57,13 @@ def parse_field(
         if not is_flag
         else {"const": None}
         if is_inverted
-        else {"const": next(iter(enum_type))}
+        else {"const": list(enum_type)[0]}
     )
 
     # Add Enum Field
     parser.add_argument(
         field.argname(is_inverted),
         action=action,
-        type=enum_type,
         help=field.description(),
         dest=field.name,
         metavar=metavar,
